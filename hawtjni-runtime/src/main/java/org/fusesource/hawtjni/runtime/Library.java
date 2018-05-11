@@ -12,6 +12,9 @@ package org.fusesource.hawtjni.runtime;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
@@ -81,6 +84,8 @@ import java.util.Set;
 public class Library {
 
     static final String SLASH = System.getProperty("file.separator");
+    
+    private static Path tempExtractDir = null;
 
     final private String name;
     final private String version;
@@ -300,7 +305,6 @@ public class Library {
 
             int idx = targetLibName.lastIndexOf('.');
             String prefix = targetLibName.substring(0, idx)+"-";
-            String suffix = targetLibName.substring(idx);
 
             // Use the user provided path,
             // then fallback to the java temp directory,
@@ -311,7 +315,7 @@ public class Library {
                                     file(System.getProperty("user.home"), ".hawtjni", name))) {
                 if( path!=null ) {
                     // Try to extract it to the custom path...
-                    File target = extract(errors, resource, prefix, suffix, path);
+                    File target = extract(errors, resource, prefix, targetLibName, path);
                     if( target!=null ) {
                         if( load(errors, target) ) {
                             nativeLibrarySourceUrl = resource;
@@ -349,7 +353,7 @@ public class Library {
         return libName;
     }
 
-    private File extract(ArrayList<Throwable> errors, URL source, String prefix, String suffix, File directory) {
+    private File extract(ArrayList<Throwable> errors, URL source, String prefix, String targetLibName, File directory) {
         File target = null;
         directory = directory.getAbsoluteFile();
         if (!directory.exists()) {
@@ -359,10 +363,16 @@ public class Library {
             }
         }
         try {
+            //Create a single temporary directory to allow extracting multiple libraries w/o renaming them
+            if (tempExtractDir == null) {
+                tempExtractDir = Files.createTempDirectory(directory.toPath(), prefix);
+            }
+        	
             FileOutputStream os = null;
             InputStream is = null;
             try {
-                target = File.createTempFile(prefix, suffix, directory);
+                Path targetPath = Paths.get(tempExtractDir.toString(), targetLibName);
+            	  target = Files.createFile(targetPath).toFile();
                 is = source.openStream();
                 if (is != null) {
                     byte[] buffer = new byte[4096];
