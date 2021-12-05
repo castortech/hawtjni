@@ -36,7 +36,7 @@
         <forge-project-id>hawtjni</forge-project-id>
         <forge-project-id-uc>HAWTJNI</forge-project-id-uc>
         <scalate-version>1.6.1</scalate-version>
-        <scalamd-version>1.6</scalamd-version>    
+        <scalamd-version>1.6</scalamd-version>
         <slf4j-version>1.7.30</slf4j-version>
         <jetty-plugin-version>9.4.28.v20200408</jetty-plugin-version>
         <scala-plugin-version>2.9</scala-plugin-version>
@@ -188,7 +188,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
@@ -247,5 +246,4 @@
     <module>hawtjni-website</module>
         -->
     </modules>
-
 </project>
