@@ -36,9 +36,9 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-      <version>4.7</version>
+            <version>4.13.1</version>
             <scope>test</scope>
-        </dependency>    
+        </dependency>
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -46,7 +46,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-  
+
     <build>
         <plugins>
             <plugin>
@@ -83,12 +83,12 @@
                     </execution>
                 </executions>
             </plugin>
-      
+
             <!-- include all the dependencies into the jar so it can run standalone -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.3</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -115,9 +115,8 @@
             </plugin>
         </plugins>
     </build>
-  
+
     <profiles>
-    
         <!-- Profile which enables Universal binaries on OS X -->
         <profile>
             <id>mac</id>
