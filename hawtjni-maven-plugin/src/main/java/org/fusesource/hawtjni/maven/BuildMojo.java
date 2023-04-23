@@ -44,7 +44,7 @@ import org.fusesource.hawtjni.runtime.Library;
 
 /**
  * This goal builds the JNI module which was previously
- * generated with the generate goal.  It adds the JNI module
+ * generated with the generate goal. It adds the JNI module
  * to the test resource path so that unit tests can load
  * the freshly built JNI library.
  *
