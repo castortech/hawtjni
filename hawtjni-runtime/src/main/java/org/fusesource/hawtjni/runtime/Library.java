@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -201,7 +202,7 @@ public class Library {
         if (version == null) {
             version = this.version;
         }
-        ArrayList<Throwable> errors = new ArrayList<Throwable>();
+        List<Throwable> errors = new ArrayList<Throwable>();
 
         String[] specificDirs = getSpecificSearchDirs();
         String libFilename = map(name);
@@ -311,7 +312,7 @@ public class Library {
         };
     }
 
-    private boolean extractAndLoad(ArrayList<Throwable> errors, String customPath, String dir, String libName, String targetLibName) {
+    private boolean extractAndLoad(List<Throwable> errors, String customPath, String dir, String libName, String targetLibName) {
         String resourcePath = "META-INF/native/" + ( dir == null ? "" : (dir + '/')) + libName;
         URL resource = classLoader.getResource(resourcePath);
         if( resource !=null ) {
@@ -363,7 +364,7 @@ public class Library {
         return libName;
     }
 
-    private File extractSha1(ArrayList<Throwable> errors, URL source, String prefix, String suffix, File directory) {
+    private File extractSha1(List<Throwable> errors, URL source, String prefix, String suffix, File directory) {
         File target = null;
         directory = directory.getAbsoluteFile();
         if (!directory.exists()) {
@@ -437,7 +438,7 @@ public class Library {
         return sha1;
     }
 
-    private File extractTemp(ArrayList<Throwable> errors, URL source, String prefix, String targetLibName, File directory) {
+    private File extractTemp(List<Throwable> errors, URL source, String prefix, String targetLibName, File directory) {
         File target = null;
         directory = directory.getAbsoluteFile();
         if (!directory.exists()) {
@@ -523,7 +524,7 @@ public class Library {
         }
     }
 
-    private boolean load(ArrayList<Throwable> errors, File lib) {
+    private boolean load(List<Throwable> errors, File lib) {
         try {
             System.load(lib.getPath());
             nativeLibraryPath = lib.getPath();
@@ -536,7 +537,7 @@ public class Library {
         return false;
     }
 
-    private boolean loadLibrary(ArrayList<Throwable> errors, String lib) {
+    private boolean loadLibrary(List<Throwable> errors, String lib) {
         try {
             System.loadLibrary(lib);
             nativeLibraryPath = "java.library.path,sun.boot.library.pathlib:" + lib;
@@ -548,5 +549,4 @@ public class Library {
         }
         return false;
     }
-
 }
