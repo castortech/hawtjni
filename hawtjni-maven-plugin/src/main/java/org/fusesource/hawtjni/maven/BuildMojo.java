@@ -187,7 +187,7 @@ public class BuildMojo extends AbstractMojo {
     private Dependency nativeSrcDependency;
 
     /**
-     * URL to where we can down the source package
+     * URL to where we can download the source package
      */
     @Parameter(defaultValue = "${native-src-url}")
     private String nativeSrcUrl;
@@ -198,6 +198,13 @@ public class BuildMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "detect")
     private String windowsBuildTool;
+
+    /**
+     * The Configuration to use on Windows systems.  Set
+     * to 'release' or 'debug'
+     */
+    @Parameter(defaultValue = "release")
+    private String windowsConfiguration;
 
     /**
      * The name of the msbuild/vcbuild project to use.
@@ -238,7 +245,7 @@ public class BuildMojo extends AbstractMojo {
         Library library = new Library(name);
         String libPlatform = platform != null ? platform : Library.getPlatform();
         String platform;
-        String configuration="release";
+        String configuration = windowsConfiguration;
         if( "windows32".equals(libPlatform) ) {
         	platform = "Win32";
         } else if( "windows64".equals(libPlatform) ) {
