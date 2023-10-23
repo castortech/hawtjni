@@ -457,6 +457,9 @@ public class Library {
             InputStream is = null;
             try {
                 Path targetPath = Paths.get(tempExtractDir.toString(), targetLibName);
+                if (Files.exists(targetPath)) {
+                	return targetPath.toFile();
+                }
             	  target = Files.createFile(targetPath).toFile();
                 is = source.openStream();
                 if (is != null) {
