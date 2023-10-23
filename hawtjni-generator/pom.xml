@@ -36,7 +36,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>xbean-finder</artifactId>    
+            <artifactId>xbean-finder</artifactId>
             <groupId>org.apache.xbean</groupId>
             <version>4.16</version>
         </dependency>
@@ -101,7 +101,7 @@
                                         <exclude>org/apache/xbean/asm7/original/commons/EmptyVisitor*</exclude>
                                     </excludes>
                                 </filter>
-                            </filters>              
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
