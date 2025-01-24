@@ -13,7 +13,7 @@ package org.fusesource.hawtjni.generator.model;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.fusesource.hawtjni.runtime.FieldFlag;
 import org.fusesource.hawtjni.runtime.JniField;
 import org.fusesource.hawtjni.runtime.T32;
@@ -22,11 +22,11 @@ import static org.fusesource.hawtjni.generator.util.TextSupport.*;
 import static org.fusesource.hawtjni.runtime.FieldFlag.*;
 
 /**
- * 
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ReflectField implements JNIField {
-    
+
     private ReflectClass parent;
     private Field field;
     private ReflectType type;
@@ -41,17 +41,20 @@ public class ReflectField implements JNIField {
         lazyLoad();
     }
 
-    public int hashCode() {
+    @Override
+		public int hashCode() {
         return field.hashCode();
     }
 
-    public boolean equals(Object obj) {
+    @Override
+		public boolean equals(Object obj) {
         if (!(obj instanceof ReflectField))
             return false;
         return ((ReflectField) obj).field.equals(field);
     }
-    
-    public String toString() {
+
+    @Override
+		public String toString() {
         return field.toString();
     }
 
@@ -131,27 +134,27 @@ public class ReflectField implements JNIField {
             return null;
         return value;
     }
-    
+
     private void lazyLoad() {
-        this.type = new ReflectType(field.getType());
-        this.annotation = this.field.getAnnotation(JniField.class);
-        this.flags = new HashSet<FieldFlag>();
-        this.accessor = new ReflectFieldAccessor(this.field.getName());
-        if( this.annotation!=null ) {
-            this.flags.addAll(Arrays.asList(this.annotation.flags()));
-            if (!StringUtils.isEmpty(this.annotation.accessor())) {
-                this.accessor = new ReflectFieldAccessor(this.annotation.accessor());
-            } else if (!StringUtils.isEmpty(this.annotation.getter()) &&
-                    !StringUtils.isEmpty(this.annotation.setter())) {
-                this.accessor = new ReflectFieldAccessor(
-                        this.annotation.getter(),
-                        this.flags.contains(GETTER_NONMEMBER),
-                        this.annotation.setter(),
-                        this.flags.contains(SETTER_NONMEMBER));
+        type = new ReflectType(field.getType());
+        annotation = field.getAnnotation(JniField.class);
+        flags = new HashSet<FieldFlag>();
+        accessor = new ReflectFieldAccessor(field.getName());
+        if( annotation!=null ) {
+            flags.addAll(Arrays.asList(annotation.flags()));
+            if (!StringUtils.isEmpty(annotation.accessor())) {
+                accessor = new ReflectFieldAccessor(annotation.accessor());
+            } else if (!StringUtils.isEmpty(annotation.getter()) &&
+                    !StringUtils.isEmpty(annotation.setter())) {
+                accessor = new ReflectFieldAccessor(
+                        annotation.getter(),
+                        flags.contains(GETTER_NONMEMBER),
+                        annotation.setter(),
+                        flags.contains(SETTER_NONMEMBER));
             }
         }
-        
-        allowConversion = this.field.getAnnotation(T32.class)!=null;
+
+        allowConversion = field.getAnnotation(T32.class)!=null;
     }
 
 }
