@@ -75,12 +75,6 @@ public class BuildMojo extends AbstractMojo {
      */
     private List<RemoteRepository> remoteRepositories;
 
-    /**
-     * Local maven repository.
-     */
-    @Parameter(defaultValue = "${localRepository}", readonly = true)
-    protected ArtifactRepository localRepository;
-
     @Component
     private RepositorySystem repositorySystem;
 

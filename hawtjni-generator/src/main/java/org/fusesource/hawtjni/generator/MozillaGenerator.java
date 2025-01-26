@@ -15,11 +15,11 @@ import java.util.*;
 
 /**
  * Produces the java classes mapping to XPCOM Mozilla objects.
- * 
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@SuppressWarnings("nls")
 public class MozillaGenerator {
-
     static boolean DEBUG = false;
 
     FileReader r = null;
@@ -54,7 +54,7 @@ public class MozillaGenerator {
 
     static String NO_SUPER_CLASS = "SWT_NO_SUPER_CLASS";
 
-    static String[][] TYPES_C2JAVA = { { "PRBool *", "int[]" },
+		static String[][] TYPES_C2JAVA = { { "PRBool *", "int[]" },
             { "nsIID &", "nsID" },
             { "nsCID &", "nsID" },
             { "nsCID * *", "int /*long*/" }, // nsID[] not supported by jnigen
@@ -225,14 +225,14 @@ public class MozillaGenerator {
                 vtbl += ", ";
         }
         vtbl += ");";
-        Integer key = new Integer(argTypes.length);
+        Integer key = Integer.valueOf(argTypes.length);
         TreeSet<String> list = vtbls.get(key);
         if (list == null) {
             list = new TreeSet<String>();
             vtbls.put(key, list);
         }
         boolean duplicate = false;
-        
+
         for (String s : list) {
             if (vtbl.equals(s)) {
                 duplicate = true;
@@ -627,5 +627,4 @@ public class MozillaGenerator {
             + " * -  Copyright (C) 2003, 2009 IBM Corp.  All Rights Reserved.\r\n" + " *\r\n" + " * ***** END LICENSE BLOCK ***** */";
 
     static String PACKAGE_DECLARATION = "package org.eclipse.hawtjni.internal.mozilla;";
-
 }

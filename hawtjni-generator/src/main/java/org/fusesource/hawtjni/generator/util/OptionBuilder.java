@@ -14,11 +14,10 @@ import org.apache.commons.cli.Option;
 /**
  * a better version of org.apache.commons.cli.OptionBuilder
  * IDE provides nicer auto complete and less compiler warnings.
- * 
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class OptionBuilder {
-
     private String id;
     private String name;
     private String description;
@@ -33,7 +32,8 @@ public class OptionBuilder {
         return new OptionBuilder();
     }
 
-    public Option op() {
+    @SuppressWarnings("nls")
+		public Option op() {
         Option option = new Option( id!=null ? id : " ", description );
         option.setLongOpt(name);
         option.setRequired( required );
@@ -49,7 +49,7 @@ public class OptionBuilder {
     }
 
     public OptionBuilder arg(String argName) {
-        this.arg = argName;
+        arg = argName;
         return this;
     }
 
@@ -64,12 +64,12 @@ public class OptionBuilder {
     }
 
     public OptionBuilder name(String lname) {
-        this.name = lname;
+        name = lname;
         return this;
     }
 
     public OptionBuilder id(String name) {
-        this.id = name;
+        id = name;
         return this;
     }
 
