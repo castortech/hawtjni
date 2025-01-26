@@ -1,13 +1,13 @@
 /**
  * Copyright (C) 2009-2011 FuseSource Corp.
  * http://fusesource.com
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,15 +43,14 @@ import org.fusesource.hawtjni.generator.ProgressMonitor;
 
 /**
  * This goal generates the native source code and a
- * autoconf/msbuild based build system needed to 
+ * autoconf/msbuild based build system needed to
  * build a JNI library for any HawtJNI annotated
  * classes in your maven project.
- * 
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 public class GenerateMojo extends AbstractMojo {
-
     /**
      * The maven project.
      */
@@ -78,7 +77,7 @@ public class GenerateMojo extends AbstractMojo {
 
     /**
      * The copyright header template that will be added to the generated source files.
-     * Use the '%END_YEAR%' token to have it replaced with the current year.  
+     * Use the '%END_YEAR%' token to have it replaced with the current year.
      */
     @Parameter(defaultValue = "")
     private String copyright;
@@ -94,13 +93,13 @@ public class GenerateMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File classesDirectory;
-    
+
     /**
      * The directory where the generated build package is located..
      */
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/hawtjni/native-package")
     private File packageDirectory;
-    
+
     /**
      * The list of additional files to be included in the package will be
      * placed.
@@ -119,7 +118,7 @@ public class GenerateMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "${skip-autogen}")
     private boolean skipAutogen;
-    
+
     /**
      * Should we force executing the autogen.sh file.
      */
@@ -137,15 +136,15 @@ public class GenerateMojo extends AbstractMojo {
      */
     @Parameter
     private List<String> autogenArgs;
-    
+
     /**
      * Set this value to false to disable the callback support in HawtJNI.
      * Disabling callback support can substantially reduce the size
-     * of the generated native library.  
+     * of the generated native library.
      */
     @Parameter(defaultValue = "true")
     private boolean callbacks;
-    
+
     /**
      * The build tool to use on Windows systems.  Set
      * to 'msbuild', 'vcbuild', or 'detect' or 'none'
@@ -160,36 +159,36 @@ public class GenerateMojo extends AbstractMojo {
      */
     @Parameter
     private String windowsProjectName;
-    
+
     /**
      * Set this value to true to include the import of a custom properties file in your vcxproj (not applicable
      * to vs2008). This greatly simplifies the configurability of your project.
      */
     @Parameter(defaultValue = "false")
     private boolean windowsCustomProps;
-    
+
     /**
      * The tools version used in the header of your vcxproj (not applicable to vs2008).
      */
     @Parameter(defaultValue = "4.0")
     private String windowsToolsVersion;
-    
+
     /**
-     * The target platform version used in your vcxproj (not applicable to vs2008). 
+     * The target platform version used in your vcxproj (not applicable to vs2008).
      * Not supplied by default.
      */
     @Parameter
     private String windowsTargetPlatformVersion;
-    
+
     /**
-     * The platform toolset version used in your vcxproj (not applicable to vs2008). 
+     * The platform toolset version used in your vcxproj (not applicable to vs2008).
      * Not supplied by default.
      */
     @Parameter
     private String windowsPlatformToolset;
 
     private File targetSrcDir;
-    
+
     private CLI cli = new CLI();
 
     public void execute() throws MojoExecutionException {
@@ -207,7 +206,7 @@ public class GenerateMojo extends AbstractMojo {
         try {
             FileUtils.copyDirectory(nativeSourceDirectory, generatedNativeSourceDirectory);
         } catch (Exception e) {
-            throw new MojoExecutionException("Copy of Native source failed: "+e, e);
+            throw new MojoExecutionException("Copy of Native source failed: " + e, e);
         }
     }
 
@@ -231,11 +230,12 @@ public class GenerateMojo extends AbstractMojo {
         try {
             generator.generate();
         } catch (Exception e) {
-            throw new MojoExecutionException("Native source code generation failed: "+e, e);
+            throw new MojoExecutionException("Native source code generation failed: " + e, e);
         }
     }
 
-    private void generateBuildSystem() throws MojoExecutionException {
+    @SuppressWarnings("nls")
+		private void generateBuildSystem() throws MojoExecutionException {
         try {
             packageDirectory.mkdirs();
             new File(packageDirectory, "m4").mkdirs();
@@ -249,7 +249,7 @@ public class GenerateMojo extends AbstractMojo {
             if( generatedNativeSourceDirectory!=null && generatedNativeSourceDirectory.isDirectory() ) {
                 FileUtils.copyDirectoryStructureIfModified(generatedNativeSourceDirectory, targetSrcDir);
             }
-            
+
             copyTemplateResource("readme.md", false);
             copyTemplateResource("configure.ac", true);
             copyTemplateResource("Makefile.am", true);
@@ -259,32 +259,38 @@ public class GenerateMojo extends AbstractMojo {
 
             // To support windows based builds..
             String tool = windowsBuildTool.toLowerCase().trim();
-            if( "detect".equals(tool) ) {
-                copyTemplateResource("vs2008.vcproj", (windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", true);
-                copyTemplateResource("vs2010.vcxproj", (windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj", true);
-                if (windowsCustomProps) {
-                    copyTemplateResource("vs2010.custom.props", (windowsProjectName != null ? windowsProjectName : "vs2010") + ".custom.props", true);
+            if ("detect".equals(tool)) {
+                copyTemplateResource("vs2008.vcproj",
+                		(windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", true);
+                copyTemplateResource("vs2010.vcxproj",
+                		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj", true);
+                if  (windowsCustomProps) {
+                    copyTemplateResource("vs2010.custom.props",
+                    		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".custom.props", true);
                 }
-            } else if( "msbuild".equals(tool) ) {
-                copyTemplateResource("vs2010.vcxproj", (windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj", true);
-                if (windowsCustomProps) {
-                    copyTemplateResource("vs2010.custom.props", (windowsProjectName != null ? windowsProjectName : "vs2010") + ".custom.props", true);
+            } else if ("msbuild".equals(tool)) {
+                copyTemplateResource("vs2010.vcxproj",
+                		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj", true);
+                if  (windowsCustomProps) {
+                    copyTemplateResource("vs2010.custom.props",
+                    		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".custom.props", true);
                 }
-            } else if( "vcbuild".equals(tool) ) {
-                copyTemplateResource("vs2008.vcproj", (windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", true);
-            } else if( "none".equals(tool) ) {
+            } else if ("vcbuild".equals(tool)) {
+                copyTemplateResource("vs2008.vcproj",
+                		(windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", true);
+            } else if ("none".equals(tool)) {
             } else {
-                throw new MojoExecutionException("Invalid setting for windowsBuildTool: "+windowsBuildTool);
+                throw new MojoExecutionException("Invalid setting for windowsBuildTool: " + windowsBuildTool);
             }
 
             File autogen = new File(packageDirectory, "autogen.sh");
             File configure = new File(packageDirectory, "configure");
-            if( !autogen.exists() ) {
+            if (!autogen.exists()) {
                 copyTemplateResource("autogen.sh", false);
                 cli.setExecutable(autogen);
             }
-            if( !skipAutogen ) {
-                if( (!configure.exists() && !CLI.IS_WINDOWS) || forceAutogen ) {
+            if (!skipAutogen) {
+                if ((!configure.exists() && !CLI.IS_WINDOWS) || forceAutogen) {
                     try {
                         cli.system(packageDirectory, new String[] {"./autogen.sh"}, autogenArgs);
                     } catch (Exception e) {
@@ -292,10 +298,8 @@ public class GenerateMojo extends AbstractMojo {
                     }
                 }
             }
-            
-            
         } catch (Exception e) {
-            throw new MojoExecutionException("Native build system generation failed: "+e, e);
+            throw new MojoExecutionException("Native build system generation failed: " + e, e);
         }
     }
 
@@ -319,7 +323,8 @@ public class GenerateMojo extends AbstractMojo {
         copyTemplateResource(file, file, filter);
     }
 
-    private void copyTemplateResource(String file, String output, boolean filter) throws MojoExecutionException {
+    @SuppressWarnings("nls")
+		private void copyTemplateResource(String file, String output, boolean filter) throws MojoExecutionException {
         try {
             File target = FileUtils.resolveFile(packageDirectory, output);
             if( target.isFile() && target.canRead() ) {
@@ -334,13 +339,13 @@ public class GenerateMojo extends AbstractMojo {
                 tmp.delete();
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Could not extract template resource: "+file, e);
+            throw new MojoExecutionException("Could not extract template resource: " + file, e);
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "nls" })
     private FilterWrapper[] filters(boolean filter) throws IOException {
-        if( !filter ) {
+        if (!filter) {
             return new FilterWrapper[0];
         }
 
@@ -351,7 +356,7 @@ public class GenerateMojo extends AbstractMojo {
         values.put("PROJECT_NAME", name);
         values.put("PROJECT_NAME_UNDER_SCORE", name.replaceAll("\\W", "_"));
         values.put("VERSION", project.getVersion());
-        
+
         List<String> cpp_files = new ArrayList<String>();
         cpp_files.addAll(FileUtils.getFileNames(targetSrcDir, "**/*.cpp", null, false));
         cpp_files.addAll(FileUtils.getFileNames(targetSrcDir, "**/*.cxx", null, false));
@@ -364,6 +369,7 @@ public class GenerateMojo extends AbstractMojo {
         String xml_sources = "";
         String vs10_sources = "";
         boolean first = true;
+
         for (String f : files) {
             if( !first ) {
                 sources += "\\\n";
@@ -372,7 +378,7 @@ public class GenerateMojo extends AbstractMojo {
                 first=false;
             }
             sources += "  src/"+f;
-            
+
             xml_sources+="      <File RelativePath=\".\\src\\"+ (f.replace('/', '\\')) +"\" />\n";
             vs10_sources+="    <ClCompile Include=\".\\src\\"+ (f.replace('/', '\\')) +"\" />\n";  //VS adds trailing space and eases compares
         }
@@ -386,17 +392,18 @@ public class GenerateMojo extends AbstractMojo {
         values.put("PROJECT_SOURCES", sources);
         values.put("PROJECT_XML_SOURCES", xml_sources);
         values.put("PROJECT_VS10_SOURCES", vs10_sources);
-        
-        values.put("CUSTOM_PROPS", windowsCustomProps ? "<Import Project=\"" + 
+
+        values.put("CUSTOM_PROPS", windowsCustomProps ? "<Import Project=\"" +
         		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".custom.props\" />" : "");
       	values.put("TOOLS_VERSION", windowsToolsVersion);
-      	values.put("TARGET_PLATFORM_VERSION", windowsTargetPlatformVersion != null ? 
+      	values.put("TARGET_PLATFORM_VERSION", windowsTargetPlatformVersion != null ?
       			"<WindowsTargetPlatformVersion>" + windowsTargetPlatformVersion + "</WindowsTargetPlatformVersion>" : "");
-      	values.put("PLATFORM_TOOLSET", windowsPlatformToolset != null ? 
+      	values.put("PLATFORM_TOOLSET", windowsPlatformToolset != null ?
       			"<PlatformToolset>" + windowsPlatformToolset + "</PlatformToolset>" : "");
 
       	FileUtils.FilterWrapper wrapper = new FileUtils.FilterWrapper() {
-            public Reader getReader(Reader reader) {
+            @Override
+						public Reader getReader(Reader reader) {
                 StringSearchInterpolator propertiesInterpolator = new StringSearchInterpolator(startExp, endExp);
                 propertiesInterpolator.addValueSource(new MapBasedValueSource(values));
                 propertiesInterpolator.setEscapeString(escapeString);
@@ -407,6 +414,4 @@ public class GenerateMojo extends AbstractMojo {
         };
         return new FilterWrapper[] { wrapper };
     }
-    
-
 }

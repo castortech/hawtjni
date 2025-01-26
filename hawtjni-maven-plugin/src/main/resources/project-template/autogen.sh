@@ -18,19 +18,20 @@
 
 auto_clean() {
   AUTO_FILES="
-  configure config.log config.status 
-  autom4te.cache autotools aclocal.m4  libtool  
-  m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 
-  Makefile.in Makefile 
-  src/Makefile src/Makefile.in  
+  configure config.log config.status
+  autom4te.cache autotools aclocal.m4  libtool
+  m4/libtool.m4 m4/ltoptions.m4 m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4
+  Makefile.in Makefile
+  src/Makefile src/Makefile.in
   src/config.in src/config.h src/config.h.in* src/stamp-h1
   "
-  for f in "$AUTO_FILES" ; do
+  for f in "$AUTO_FILES"; do
     rm -Rf $f
   done
 }
-auto_reconf() {  
-  autoreconf --force --install -I m4  
+
+auto_reconf() {
+  autoreconf --force --install -I m4
 }
 
 case "$1" in

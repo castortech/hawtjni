@@ -216,39 +216,38 @@ public class BuildMojo extends AbstractMojo {
 
     private final CLI cli = new CLI();
 
-    public void execute() throws MojoExecutionException {
+    @SuppressWarnings("nls")
+		public void execute() throws MojoExecutionException {
     	cli.verbose = verbose;
     	cli.log = getLog();
         try {
             File buildDir = new File(buildDirectory, "native-build");
             buildDir.mkdirs();
-            if ( CLI.IS_WINDOWS ) {
+            if (CLI.IS_WINDOWS) {
                 vsBasedBuild(buildDir);
             } else {
                 configureBasedBuild(buildDir);
             }
 
-            getLog().info("Adding test resource root: "+libDirectory.getAbsolutePath());
+            getLog().info("Adding test resource root: " + libDirectory.getAbsolutePath());
             Resource testResource = new Resource();
             testResource.setDirectory(libDirectory.getAbsolutePath());
             project.addTestResource(testResource); //();
-
         } catch (Exception e) {
-            throw new MojoExecutionException("build failed: "+e, e);
+            throw new MojoExecutionException("build failed: " + e, e);
         }
     }
 
-    private void vsBasedBuild(File buildDir) throws CommandLineException, MojoExecutionException, IOException {
-
+    @SuppressWarnings("nls")
+		private void vsBasedBuild(File buildDir) throws CommandLineException, MojoExecutionException, IOException {
         FileUtils.copyDirectoryStructureIfModified(packageDirectory, buildDir);
-
         Library library = new Library(name);
         String libPlatform = platform != null ? platform : Library.getPlatform();
         String platform;
         String configuration = windowsConfiguration;
-        if( "windows32".equals(libPlatform) ) {
+        if ("windows32".equals(libPlatform)) {
         	platform = "Win32";
-        } else if( "windows64".equals(libPlatform) ) {
+        } else if ("windows64".equals(libPlatform)) {
         	platform = "x64";
         } else {
         	throw new MojoExecutionException("Unsupported platform: "+libPlatform);
@@ -258,11 +257,11 @@ public class BuildMojo extends AbstractMojo {
         String tool = windowsBuildTool.toLowerCase().trim();
         if( "detect".equals(tool) ) {
             String toolset = System.getenv("PlatformToolset");
-            if( "Windows7.1SDK".equals(toolset) ) {
+            if ("Windows7.1SDK".equals(toolset)) {
                 useMSBuild = true;
             } else {
                 String vcinstalldir = System.getenv("VCINSTALLDIR");
-                if( vcinstalldir!=null ) {
+                if(vcinstalldir!=null) {
                     if( vcinstalldir.contains("Microsoft Visual Studio 10") ||
                         vcinstalldir.contains("Microsoft Visual Studio 11") ||
                         vcinstalldir.contains("Microsoft Visual Studio 12") ||
@@ -280,44 +279,47 @@ public class BuildMojo extends AbstractMojo {
         } else if( "vcbuild".equals(tool) ) {
             useMSBuild = false;
         } else {
-            throw new MojoExecutionException("Invalid setting for windowsBuildTool: "+windowsBuildTool);
+            throw new MojoExecutionException("Invalid setting for windowsBuildTool: " + windowsBuildTool);
         }
 
-        if( useMSBuild ) {
+        if (useMSBuild) {
             // vcbuild was removed.. use the msbuild tool instead.
-            int rc = cli.system(buildDir, new String[]{"msbuild", (windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj", "/property:Platform="+platform, "/property:Configuration="+configuration});
+            int rc = cli.system(buildDir, new String[]{"msbuild",
+            		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj",
+            		"/property:Platform=" + platform, "/property:Configuration=" + configuration});
             if( rc != 0 ) {
                 throw new MojoExecutionException("msbuild failed with exit code: "+rc);
             }
         } else {
             // try to use a vcbuild..
-            int rc = cli.system(buildDir, new String[]{"vcbuild", "/platform:"+platform, (windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", configuration});
-            if( rc != 0 ) {
-                throw new MojoExecutionException("vcbuild failed with exit code: "+rc);
+            int rc = cli.system(buildDir, new String[]{"vcbuild", "/platform:" + platform,
+            		(windowsProjectName != null ? windowsProjectName : "vs2008") + ".vcproj", configuration});
+            if (rc != 0) {
+                throw new MojoExecutionException("vcbuild failed with exit code: " + rc);
             }
         }
 
-        File libFile=FileUtils.resolveFile(buildDir, "target/"+platform+"-"+configuration+"/lib/"+library.getLibraryFileName());
+        File libFile=FileUtils.resolveFile(buildDir,
+        		"target/" + platform + "-" + configuration + "/lib/" + library.getLibraryFileName());
         if( !libFile.exists() ) {
             throw new MojoExecutionException("Visual Studio did not generate: "+libFile);
         }
 
         File target=FileUtils.resolveFile(libDirectory, library.getPlatformSpecificResourcePath(libPlatform));
         FileUtils.copyFile(libFile, target);
-
 	}
 
-
+	@SuppressWarnings("nls")
 	private void configureBasedBuild(File buildDir) throws IOException, MojoExecutionException, CommandLineException {
-
         File configure = new File(packageDirectory, "configure");
-        if( configure.exists() ) {
+        if (configure.exists()) {
             FileUtils.copyDirectoryStructureIfModified(packageDirectory, buildDir);
         } else if (downloadSourcePackage) {
             downloadNativeSourcePackage(buildDir);
         } else {
-            if( !buildDir.exists() ) {
-                throw new MojoExecutionException("The configure script is missing from the generated native source package and downloadSourcePackage is disabled: "+configure);
+            if(!buildDir.exists()) {
+                throw new MojoExecutionException(
+                "The configure script is missing from the generated native source package and downloadSourcePackage is disabled: " + configure);
             }
         }
 
@@ -329,45 +331,49 @@ public class BuildMojo extends AbstractMojo {
         File distLibDirectory = new File(distDirectory, "lib");
         distLibDirectory.mkdirs();
 
-        if( autogen.exists() && !skipAutogen ) {
-            if( (!configure.exists() && !CLI.IS_WINDOWS) || forceAutogen ) {
+        if (autogen.exists() && !skipAutogen) {
+            if ((!configure.exists() && !CLI.IS_WINDOWS) || forceAutogen) {
                 cli.setExecutable(autogen);
                 int rc = cli.system(buildDir, new String[] {"./autogen.sh"}, autogenArgs);
-                if( rc != 0 ) {
-                    throw new MojoExecutionException("./autogen.sh failed with exit code: "+rc);
+                if(rc != 0) {
+                    throw new MojoExecutionException("./autogen.sh failed with exit code: " + rc);
                 }
             }
         }
 
-        if( configure.exists() && !skipConfigure ) {
-            if( !makefile.exists() || forceConfigure ) {
-
+        if (configure.exists() && !skipConfigure) {
+            if (!makefile.exists() || forceConfigure) {
                 File autotools = new File(buildDir, "autotools");
                 File[] listFiles = autotools.listFiles();
-                if( listFiles!=null ) {
+
+                if (listFiles!=null) {
                     for (File file : listFiles) {
                         cli.setExecutable(file);
                     }
                 }
 
                 cli.setExecutable(configure);
-                int rc = cli.system(buildDir, new String[]{"./configure", "--disable-ccache", "--prefix="+distDirectory.getCanonicalPath(), "--libdir="+distDirectory.getCanonicalPath()+"/lib"}, configureArgs);
-                if( rc != 0 ) {
-                    throw new MojoExecutionException("./configure failed with exit code: "+rc);
+                int rc = cli.system(buildDir, new String[]{
+                		"./configure",
+                		"--disable-ccache",
+                		"--prefix=" + distDirectory.getCanonicalPath(),
+                		"--libdir=" + distDirectory.getCanonicalPath() + "/lib"
+                }, configureArgs);
+                if (rc != 0) {
+                    throw new MojoExecutionException("./configure failed with exit code: " + rc);
                 }
             }
         }
 
         int rc = cli.system(buildDir, new String[]{"make", "install"});
-        if( rc != 0 ) {
-            throw new MojoExecutionException("make based build failed with exit code: "+rc);
+        if (rc != 0) {
+            throw new MojoExecutionException("make based build failed with exit code: " + rc);
         }
 
         Library library = new Library(name);
-
         File libFile = new File(distLibDirectory, library.getLibraryFileName());
-        if( !libFile.exists() ) {
-            throw new MojoExecutionException("Make based build did not generate: "+libFile);
+        if (!libFile.exists()) {
+            throw new MojoExecutionException("Make based build did not generate: " + libFile);
         }
 
         if( platform == null ) {
@@ -378,14 +384,18 @@ public class BuildMojo extends AbstractMojo {
         FileUtils.copyFile(libFile, target);
     }
 
-    public void downloadNativeSourcePackage(File buildDir) throws MojoExecutionException  {
+    @SuppressWarnings("nls")
+		public void downloadNativeSourcePackage(File buildDir) throws MojoExecutionException  {
         File packageZipFile;
         if( nativeSrcUrl ==null || nativeSrcUrl.trim().length()==0 ) {
             Artifact artifact=null;
             if( nativeSrcDependency==null ) {
-                artifact = artifactFactory.createArtifactWithClassifier(project.getGroupId(), project.getArtifactId(), project.getVersion(), "zip", sourceClassifier);
+                artifact = artifactFactory.createArtifactWithClassifier(project.getGroupId(),
+                		project.getArtifactId(), project.getVersion(), "zip", sourceClassifier);
             } else {
-                artifact = artifactFactory.createArtifactWithClassifier(nativeSrcDependency.getGroupId(), nativeSrcDependency.getArtifactId(), nativeSrcDependency.getVersion(), nativeSrcDependency.getType(), nativeSrcDependency.getClassifier());
+                artifact = artifactFactory.createArtifactWithClassifier(nativeSrcDependency.getGroupId(),
+                		nativeSrcDependency.getArtifactId(), nativeSrcDependency.getVersion(),
+                		nativeSrcDependency.getType(), nativeSrcDependency.getClassifier());
             }
             try {
                 artifactResolver.resolveAlways(artifact, remoteArtifactRepositories, localRepository);
@@ -414,7 +424,6 @@ public class BuildMojo extends AbstractMojo {
                     } finally {
                         IOUtil.close(is);
                     }
-
                 } finally {
                     IOUtil.close(is);
                 }
@@ -425,19 +434,16 @@ public class BuildMojo extends AbstractMojo {
 
         try {
             File dest = new File(buildDirectory, "native-build-extracted");
-            getLog().info("Extracting "+packageZipFile+" to "+dest);
+            getLog().info("Extracting " + packageZipFile + " to " + dest);
 
             UnArchiver unArchiver = archiverManager.getUnArchiver("zip");
             unArchiver.setSourceFile(packageZipFile);
             unArchiver.extract("", dest);
-
-
             File source = findSourceRoot(dest);
-            if( source==null ) {
+            if (source==null) {
                 throw new MojoExecutionException("Extracted package did not look like it contained a native source build.");
             }
             FileUtils.copyDirectoryStructureIfModified(source, buildDir);
-
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Throwable e) {
@@ -446,13 +452,13 @@ public class BuildMojo extends AbstractMojo {
     }
 
     private File findSourceRoot(File dest) {
-        if(dest.isDirectory()) {
-            if( new File(dest, "configure").exists() ) {
+        if (dest.isDirectory()) {
+            if (new File(dest, "configure").exists()) {
                 return dest;
             } else {
                 for (File file : dest.listFiles()) {
                     File root = findSourceRoot(file);
-                    if( root!=null ) {
+                    if (root!=null) {
                         return root;
                     }
                 }
@@ -462,5 +468,4 @@ public class BuildMojo extends AbstractMojo {
             return null;
         }
     }
-
 }
