@@ -16,16 +16,16 @@
  */
 package org.fusesource.hawtjni.maven;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
@@ -40,6 +40,14 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.cli.CommandLineException;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.fusesource.hawtjni.runtime.Library;
 
 /**
@@ -50,20 +58,22 @@ import org.fusesource.hawtjni.runtime.Library;
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@SuppressWarnings("deprecation")
 @Mojo(name = "build", defaultPhase = LifecyclePhase.GENERATE_TEST_RESOURCES)
 public class BuildMojo extends AbstractMojo {
-
     /**
      * The maven project.
      */
     @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
 
+    @Parameter(defaultValue = "${session}", readonly = true, required = true)
+    private MavenSession session;
+
     /**
      * Remote repositories
      */
-    @Parameter(defaultValue = "${project.remoteArtifactRepositories}", readonly = true)
-    protected List remoteArtifactRepositories;
+    private List<RemoteRepository> remoteRepositories;
 
     /**
      * Local maven repository.
@@ -71,17 +81,8 @@ public class BuildMojo extends AbstractMojo {
     @Parameter(defaultValue = "${localRepository}", readonly = true)
     protected ArtifactRepository localRepository;
 
-    /**
-     * Artifact factory, needed to download the package source file
-     */
     @Component
-    protected ArtifactFactory artifactFactory;
-
-    /**
-     * Artifact resolver, needed to download the package source file
-     */
-    @Component
-    protected ArtifactResolver artifactResolver;
+    private RepositorySystem repositorySystem;
 
     /**
      */
@@ -216,11 +217,14 @@ public class BuildMojo extends AbstractMojo {
 
     private final CLI cli = new CLI();
 
-    @SuppressWarnings("nls")
+    @Override
+		@SuppressWarnings({ "nls", "unchecked" })
 		public void execute() throws MojoExecutionException {
     	cli.verbose = verbose;
     	cli.log = getLog();
+
         try {
+					convertToRemoteRepositories();
             File buildDir = new File(buildDirectory, "native-build");
             buildDir.mkdirs();
             if (CLI.IS_WINDOWS) {
@@ -237,6 +241,16 @@ public class BuildMojo extends AbstractMojo {
             throw new MojoExecutionException("build failed: " + e, e);
         }
     }
+
+	  @SuppressWarnings("nls")
+		private void convertToRemoteRepositories() {
+	  	@SuppressWarnings("unchecked")
+			List<ArtifactRepository> artifactRepositories = project.getRemoteArtifactRepositories();
+	  	remoteRepositories = artifactRepositories.stream()
+					.map(repo -> new RemoteRepository.Builder(repo.getId(), "default", // Use "default" as the content type
+							repo.getUrl()).build())
+					.collect(Collectors.toList());
+	  }
 
     @SuppressWarnings("nls")
 		private void vsBasedBuild(File buildDir) throws CommandLineException, MojoExecutionException, IOException {
@@ -255,14 +269,14 @@ public class BuildMojo extends AbstractMojo {
 
         boolean useMSBuild = false;
         String tool = windowsBuildTool.toLowerCase().trim();
-        if( "detect".equals(tool) ) {
+        if ("detect".equals(tool)) {
             String toolset = System.getenv("PlatformToolset");
             if ("Windows7.1SDK".equals(toolset)) {
                 useMSBuild = true;
             } else {
                 String vcinstalldir = System.getenv("VCINSTALLDIR");
-                if(vcinstalldir!=null) {
-                    if( vcinstalldir.contains("Microsoft Visual Studio 10") ||
+                if (vcinstalldir != null) {
+                    if (vcinstalldir.contains("Microsoft Visual Studio 10") ||
                         vcinstalldir.contains("Microsoft Visual Studio 11") ||
                         vcinstalldir.contains("Microsoft Visual Studio 12") ||
                         vcinstalldir.contains("Microsoft Visual Studio 14") ||
@@ -274,9 +288,9 @@ public class BuildMojo extends AbstractMojo {
                     }
                 }
             }
-        } else if( "msbuild".equals(tool) ) {
+        } else if ("msbuild".equals(tool)) {
             useMSBuild = true;
-        } else if( "vcbuild".equals(tool) ) {
+        } else if ("vcbuild".equals(tool)) {
             useMSBuild = false;
         } else {
             throw new MojoExecutionException("Invalid setting for windowsBuildTool: " + windowsBuildTool);
@@ -287,7 +301,7 @@ public class BuildMojo extends AbstractMojo {
             int rc = cli.system(buildDir, new String[]{"msbuild",
             		(windowsProjectName != null ? windowsProjectName : "vs2010") + ".vcxproj",
             		"/property:Platform=" + platform, "/property:Configuration=" + configuration});
-            if( rc != 0 ) {
+            if (rc != 0) {
                 throw new MojoExecutionException("msbuild failed with exit code: "+rc);
             }
         } else {
@@ -384,74 +398,89 @@ public class BuildMojo extends AbstractMojo {
         FileUtils.copyFile(libFile, target);
     }
 
-    @SuppressWarnings("nls")
-		public void downloadNativeSourcePackage(File buildDir) throws MojoExecutionException  {
-        File packageZipFile;
-        if( nativeSrcUrl ==null || nativeSrcUrl.trim().length()==0 ) {
-            Artifact artifact=null;
-            if( nativeSrcDependency==null ) {
-                artifact = artifactFactory.createArtifactWithClassifier(project.getGroupId(),
-                		project.getArtifactId(), project.getVersion(), "zip", sourceClassifier);
-            } else {
-                artifact = artifactFactory.createArtifactWithClassifier(nativeSrcDependency.getGroupId(),
-                		nativeSrcDependency.getArtifactId(), nativeSrcDependency.getVersion(),
-                		nativeSrcDependency.getType(), nativeSrcDependency.getClassifier());
-            }
-            try {
-                artifactResolver.resolveAlways(artifact, remoteArtifactRepositories, localRepository);
-            } catch (ArtifactResolutionException e) {
-                throw new MojoExecutionException("Error downloading.", e);
-            } catch (ArtifactNotFoundException e) {
-                throw new MojoExecutionException("Requested download does not exist.", e);
-            }
+	@SuppressWarnings("nls")
+	public void downloadNativeSourcePackage(File buildDir) throws MojoExecutionException {
+    File packageZipFile;
 
-            packageZipFile = artifact.getFile();
-            if( packageZipFile.isDirectory() ) {
-                // Yep. looks like we are running on mvn 3, seem like
-                // mvn 3 does not actually download the artifact. it just points us
-                // to our own build.
-                throw new MojoExecutionException("Add a '-Dnative-src-url=file:...' to have maven download the native package");
-            }
+    if (nativeSrcUrl == null || nativeSrcUrl.trim().isEmpty()) {
+        // Create the artifact using either the current project or the nativeSrcDependency
+        Artifact artifact;
+        if (nativeSrcDependency == null) {
+            artifact = new DefaultArtifact(
+                project.getGroupId(),
+                project.getArtifactId(),
+                sourceClassifier,
+                "zip", // Type
+                project.getVersion()
+            );
         } else {
-            try {
-                packageZipFile = new File(buildDirectory, "native-build.zip");
-                URL url = new URL(nativeSrcUrl.trim());
-                InputStream is = url.openStream();
-                try {
-                    FileOutputStream os = new FileOutputStream(packageZipFile);
-                    try {
-                        IOUtil.copy(is, os);
-                    } finally {
-                        IOUtil.close(is);
-                    }
-                } finally {
-                    IOUtil.close(is);
-                }
-            } catch (Exception e) {
-                throw new MojoExecutionException("Error downloading: "+ nativeSrcUrl, e);
-            }
+            artifact = new DefaultArtifact(
+                nativeSrcDependency.getGroupId(),
+                nativeSrcDependency.getArtifactId(),
+                nativeSrcDependency.getClassifier(),
+                nativeSrcDependency.getType() != null ? nativeSrcDependency.getType() : "zip", // Default to "zip"
+                nativeSrcDependency.getVersion()
+            );
         }
 
         try {
-            File dest = new File(buildDirectory, "native-build-extracted");
-            getLog().info("Extracting " + packageZipFile + " to " + dest);
+            // Create an ArtifactRequest to resolve the artifact
+            ArtifactRequest request = new ArtifactRequest();
+            request.setArtifact(artifact);
+            request.setRepositories(remoteRepositories); // Use modern RemoteRepository list
 
-            UnArchiver unArchiver = archiverManager.getUnArchiver("zip");
-            unArchiver.setSourceFile(packageZipFile);
-            unArchiver.extract("", dest);
-            File source = findSourceRoot(dest);
-            if (source==null) {
-                throw new MojoExecutionException("Extracted package did not look like it contained a native source build.");
+            // Resolve the artifact
+            RepositorySystemSession repositorySystemSession = session.getRepositorySession(); // Obtain session from MavenSession
+            ArtifactResult result = repositorySystem.resolveArtifact(repositorySystemSession, request);
+
+            artifact = result.getArtifact();
+            packageZipFile = artifact.getFile();
+
+            // Check if the artifact was resolved properly
+            if (packageZipFile == null || packageZipFile.isDirectory()) {
+                throw new MojoExecutionException("Artifact resolution resulted in a directory or null file. Ensure a valid source package is available.");
             }
-            FileUtils.copyDirectoryStructureIfModified(source, buildDir);
-        } catch (MojoExecutionException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new MojoExecutionException("Could not extract the native source package.", e);
+
+        } catch (ArtifactResolutionException e) {
+            throw new MojoExecutionException("Error resolving artifact: " + artifact, e);
+        }
+    } else {
+        // If nativeSrcUrl is provided, download the package from the URL
+        try {
+            packageZipFile = new File(buildDirectory, "native-build.zip");
+            URL url = new URL(nativeSrcUrl.trim());
+            InputStream is = url.openStream();
+            try (FileOutputStream os = new FileOutputStream(packageZipFile)) {
+                IOUtil.copy(is, os);
+            } finally {
+                IOUtil.close(is);
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("Error downloading: " + nativeSrcUrl, e);
         }
     }
 
-    private File findSourceRoot(File dest) {
+    // Extract the package
+    try {
+        File dest = new File(buildDirectory, "native-build-extracted");
+        getLog().info("Extracting " + packageZipFile + " to " + dest);
+
+        UnArchiver unArchiver = archiverManager.getUnArchiver("zip");
+        unArchiver.setSourceFile(packageZipFile);
+        unArchiver.extract("", dest);
+
+        File source = findSourceRoot(dest);
+        if (source == null) {
+            throw new MojoExecutionException("Extracted package did not look like it contained a native source build.");
+        }
+
+        FileUtils.copyDirectoryStructureIfModified(source, buildDir);
+    } catch (Throwable e) {
+        throw new MojoExecutionException("Could not extract the native source package.", e);
+    }
+}
+    @SuppressWarnings("nls")
+		private File findSourceRoot(File dest) {
         if (dest.isDirectory()) {
             if (new File(dest, "configure").exists()) {
                 return dest;
