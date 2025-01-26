@@ -133,7 +133,6 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>once</forkMode>
           <!-- these settings are mandatory to avoid SureFire giving a bogus system property to the web container -->
           <useSystemClassLoader>false</useSystemClassLoader>
           <useManifestOnlyJar>false</useManifestOnlyJar>
