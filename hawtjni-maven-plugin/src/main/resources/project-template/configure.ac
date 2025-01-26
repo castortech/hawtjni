@@ -25,7 +25,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([@FIRST_SOURCE_FILE@])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CANONICAL_HOST
-AC_CANONICAL_SYSTEM
 
 ## -----------------------------------------------
 ## Application Checks
