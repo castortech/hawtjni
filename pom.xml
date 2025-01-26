@@ -26,7 +26,7 @@
 
 	<groupId>org.fusesource.hawtjni</groupId>
 	<artifactId>hawtjni-project</artifactId>
-	<version>1.20-SNAPSHOT</version>
+	<version>1.21-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>HawtJNI</name>
@@ -52,7 +52,7 @@
 		<mvn-javadoc-version>3.11.2</mvn-javadoc-version>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-		<project.build.outputTimestamp>2020-12-13T22:04:00Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2025-01-26T10:35:24Z</project.build.outputTimestamp>
 	</properties>
 
 	<url>http://fusesource.github.io/${forge-project-id}</url>
@@ -193,6 +193,7 @@
 					<downloadJavadocs>true</downloadJavadocs>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

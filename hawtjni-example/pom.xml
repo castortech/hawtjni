@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>org.fusesource.hawtjni</groupId>
 		<artifactId>hawtjni-project</artifactId>
-		<version>1.20-SNAPSHOT</version>
+		<version>1.21-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>hawtjni-example</artifactId>
@@ -51,7 +51,6 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${mvn-compiler-version}</version>
 				<configuration>
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
