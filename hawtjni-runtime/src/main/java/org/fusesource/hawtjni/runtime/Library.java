@@ -84,16 +84,16 @@ import java.util.Set;
  * @see System#mapLibraryName(String)
  */
 public class Library {
-
-    public static final String STRATEGY_PROPERTY = "hawtjni.strategy";
-    public static final String STRATEGY_SHA1 = "sha1";
-    public static final String STRATEGY_TEMP = "temp";
+    public static final String STRATEGY_PROPERTY = "hawtjni.strategy"; //$NON-NLS-1$
+    public static final String STRATEGY_SHA1 = "sha1"; //$NON-NLS-1$
+    public static final String STRATEGY_TEMP = "temp"; //$NON-NLS-1$
 
     private static Path tempExtractDir = null;
 
-    static final String SLASH = System.getProperty("file.separator");
+    static final String SLASH = System.getProperty("file.separator"); //$NON-NLS-1$
 
-    static final String STRATEGY = System.getProperty(STRATEGY_PROPERTY,
+    @SuppressWarnings("nls")
+		static final String STRATEGY = System.getProperty(STRATEGY_PROPERTY,
             "windows".equals(getOperatingSystem()) ? STRATEGY_SHA1 : STRATEGY_TEMP);
 
     final private String name;
@@ -115,8 +115,9 @@ public class Library {
         this(name, version, null);
     }
 
-    public Library(String name, String version, ClassLoader classLoader) {
-        if( name == null ) {
+    @SuppressWarnings("nls")
+		public Library(String name, String version, ClassLoader classLoader) {
+        if (name == null) {
             throw new IllegalArgumentException("name cannot be null");
         }
         this.name = name;
@@ -127,8 +128,7 @@ public class Library {
     private static String version(Class<?> clazz) {
         try {
             return clazz.getPackage().getImplementationVersion();
-        } catch (Throwable e) {
-        }
+        } catch (Throwable e) { }
         return null;
     }
 
@@ -150,15 +150,16 @@ public class Library {
         return nativeLibrarySourceUrl;
     }
 
-    public static String getOperatingSystem() {
+    @SuppressWarnings("nls")
+		public static String getOperatingSystem() {
         String name = System.getProperty("os.name").toLowerCase().trim();
-        if( name.startsWith("linux") ) {
+        if (name.startsWith("linux")) {
             return "linux";
         }
-        if( name.startsWith("mac os x") ) {
+        if (name.startsWith("mac os x")) {
             return "osx";
         }
-        if( name.startsWith("win") ) {
+        if(name.startsWith("win")) {
             return "windows";
         }
         return name.replaceAll("\\W+", "_");
@@ -169,12 +170,13 @@ public class Library {
         return getOperatingSystem()+getBitModel();
     }
 
-    public static int getBitModel() {
+    @SuppressWarnings("nls")
+		public static int getBitModel() {
         String prop = System.getProperty("sun.arch.data.model");
         if (prop == null) {
             prop = System.getProperty("com.ibm.vm.bitmode");
         }
-        if( prop!=null ) {
+        if (prop!=null) {
             return Integer.parseInt(prop);
         }
         // GraalVM support, see https://github.com/fusesource/jansi/issues/162
@@ -196,14 +198,15 @@ public class Library {
         loaded = true;
     }
 
-    private void doLoad() {
+    @SuppressWarnings("nls")
+		private void doLoad() {
         /* Perhaps a custom version is specified */
         String version = System.getProperty("library."+name+".version");
         if (version == null) {
             version = this.version;
         }
-        List<Throwable> errors = new ArrayList<Throwable>();
 
+        List<Throwable> errors = new ArrayList<Throwable>();
         String[] specificDirs = getSpecificSearchDirs();
         String libFilename = map(name);
         String versionlibFilename = (version == null) ? null : map(name + "-" + version);
@@ -211,30 +214,30 @@ public class Library {
         /* Try loading library from a custom library path */
         String customPath = System.getProperty("library."+name+".path");
         if (customPath != null) {
-            for ( String dir: specificDirs ) {
-                if( version!=null && load(errors, file(customPath, dir, versionlibFilename)) )
+            for (String dir: specificDirs) {
+                if (version!=null && load(errors, file(customPath, dir, versionlibFilename)))
                     return;
-                if( load(errors, file(customPath, dir, libFilename)) )
+                if (load(errors, file(customPath, dir, libFilename)))
                     return;
             }
         }
 
         /* Try loading library from java library path */
-        if( version!=null && loadLibrary(errors, name + getBitModel() + "-" + version) )
+        if (version!=null && loadLibrary(errors, name + getBitModel() + "-" + version))
             return;
-        if( version!=null && loadLibrary(errors, name + "-" + version) )
+        if (version!=null && loadLibrary(errors, name + "-" + version))
             return;
-        if( loadLibrary(errors, name) )
+        if (loadLibrary(errors, name))
             return;
 
 
         /* Try extracting the library from the jar */
-        if( classLoader!=null ) {
+        if (classLoader!=null) {
             String targetLibName = version != null ? versionlibFilename : libFilename;
-            for ( String dir: specificDirs ) {
-                if( version!=null && extractAndLoad(errors, customPath, dir, versionlibFilename, targetLibName) )
+            for (String dir: specificDirs) {
+                if (version!=null && extractAndLoad(errors, customPath, dir, versionlibFilename, targetLibName))
                     return;
-                if( extractAndLoad(errors, customPath, dir, libFilename, targetLibName) )
+                if (extractAndLoad(errors, customPath, dir, libFilename, targetLibName))
                     return;
             }
         }
@@ -255,38 +258,47 @@ public class Library {
     final public String getArchSpecifcResourcePath() {
         return getArchSpecificResourcePath();
     }
-    final public String getArchSpecificResourcePath() {
-        return "META-INF/native/"+ getPlatform() + "/" + System.getProperty("os.arch") + "/" +map(name);
+
+    @SuppressWarnings("nls")
+		final public String getArchSpecificResourcePath() {
+        return "META-INF/native/" + getPlatform() + "/" + System.getProperty("os.arch") + "/" +map(name);
     }
 
     @Deprecated
     final public String getOperatingSystemSpecifcResourcePath() {
         return getOperatingSystemSpecificResourcePath();
     }
+
     final public String getOperatingSystemSpecificResourcePath() {
         return getPlatformSpecificResourcePath(getOperatingSystem());
     }
+
     @Deprecated
     final public String getPlatformSpecifcResourcePath() {
         return getPlatformSpecificResourcePath();
     }
+
     final public String getPlatformSpecificResourcePath() {
         return getPlatformSpecificResourcePath(getPlatform());
     }
+
     @Deprecated
     final public String getPlatformSpecifcResourcePath(String platform) {
         return getPlatformSpecificResourcePath(platform);
     }
-    final public String getPlatformSpecificResourcePath(String platform) {
-        return "META-INF/native/"+platform+"/"+map(name);
+
+    @SuppressWarnings("nls")
+		final public String getPlatformSpecificResourcePath(String platform) {
+        return "META-INF/native/" + platform + "/" + map(name);
     }
 
     @Deprecated
     final public String getResorucePath() {
         return getResourcePath();
     }
-    final public String getResourcePath() {
-        return "META-INF/native/"+map(name);
+    @SuppressWarnings("nls")
+		final public String getResourcePath() {
+        return "META-INF/native/" + map(name);
     }
 
     final public String getLibraryFileName() {
@@ -303,7 +315,8 @@ public class Library {
      * @return the list
      * @since 1.15
      */
-    final public String[] getSpecificSearchDirs() {
+    @SuppressWarnings("nls")
+		final public String[] getSpecificSearchDirs() {
         return new String[] {
                 getPlatform() + "/" + System.getProperty("os.arch"),
                 getPlatform(),
@@ -312,22 +325,23 @@ public class Library {
         };
     }
 
-    private boolean extractAndLoad(List<Throwable> errors, String customPath, String dir, String libName, String targetLibName) {
+    @SuppressWarnings("nls")
+		private boolean extractAndLoad(List<Throwable> errors, String customPath, String dir, String libName, String targetLibName) {
         String resourcePath = "META-INF/native/" + ( dir == null ? "" : (dir + '/')) + libName;
         URL resource = classLoader.getResource(resourcePath);
-        if( resource !=null ) {
 
+        if(resource !=null) {
             int idx = targetLibName.lastIndexOf('.');
-            String prefix = targetLibName.substring(0, idx)+"-";
+            String prefix = targetLibName.substring(0, idx) + "-";
 
             // Use the user provided path,
             // then fallback to the java temp directory,
             // and last, use the user home folder
             for (File path : Arrays.asList(
-                                    customPath != null ? file(customPath) : null,
-                                    file(System.getProperty("java.io.tmpdir")),
-                                    file(System.getProperty("user.home"), ".hawtjni", name))) {
-                if( path!=null ) {
+                     customPath != null ? file(customPath) : null,
+                     file(System.getProperty("java.io.tmpdir")),
+                     file(System.getProperty("user.home"), ".hawtjni", name))) {
+                if (path!=null) {
                     // Try to extract it to the custom path...
                     File target;
                     if (STRATEGY_SHA1.equals(STRATEGY)) {
@@ -364,7 +378,8 @@ public class Library {
         return libName;
     }
 
-    private File extractSha1(List<Throwable> errors, URL source, String prefix, String suffix, File directory) {
+    @SuppressWarnings("nls")
+		private File extractSha1(List<Throwable> errors, URL source, String prefix, String suffix, File directory) {
         File target = null;
         directory = directory.getAbsoluteFile();
         if (!directory.exists()) {
@@ -417,7 +432,8 @@ public class Library {
         return null;
     }
 
-    private String computeSha1(InputStream is) throws NoSuchAlgorithmException, IOException {
+    @SuppressWarnings("nls")
+		private String computeSha1(InputStream is) throws NoSuchAlgorithmException, IOException {
         String sha1;
         try {
             MessageDigest mDigest = MessageDigest.getInstance("SHA1");
@@ -438,7 +454,8 @@ public class Library {
         return sha1;
     }
 
-    private File extractTemp(List<Throwable> errors, URL source, String prefix, String targetLibName, File directory) {
+    @SuppressWarnings("nls")
+		private File extractTemp(List<Throwable> errors, URL source, String prefix, String targetLibName, File directory) {
         File target = null;
         directory = directory.getAbsoluteFile();
         if (!directory.exists()) {
@@ -500,7 +517,8 @@ public class Library {
         }
     }
 
-    private void chmod755(File file) {
+    @SuppressWarnings("nls")
+		private void chmod755(File file) {
         if (getPlatform().startsWith("windows"))
             return;
         // Use Files.setPosixFilePermissions if we are running Java 7+ to avoid forking the JVM for executing chmod
@@ -527,7 +545,8 @@ public class Library {
         }
     }
 
-    private boolean load(List<Throwable> errors, File lib) {
+    @SuppressWarnings("nls")
+		private boolean load(List<Throwable> errors, File lib) {
         try {
             System.load(lib.getPath());
             nativeLibraryPath = lib.getPath();
@@ -540,7 +559,8 @@ public class Library {
         return false;
     }
 
-    private boolean loadLibrary(List<Throwable> errors, String lib) {
+    @SuppressWarnings("nls")
+		private boolean loadLibrary(List<Throwable> errors, String lib) {
         try {
             System.loadLibrary(lib);
             nativeLibraryPath = "java.library.path,sun.boot.library.pathlib:" + lib;

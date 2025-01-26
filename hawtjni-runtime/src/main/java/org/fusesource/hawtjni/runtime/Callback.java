@@ -21,7 +21,6 @@ package org.fusesource.hawtjni.runtime;
  */
 
 public class Callback {
-
     Object object;
 
     String method, signature;
@@ -32,22 +31,21 @@ public class Callback {
 
     boolean isStatic, isArrayBased;
 
-    static final String PTR_SIGNATURE = "J"; /* C.PTR_SIZEOF == 4 ? "I" : "J"; */
+    static final String PTR_SIGNATURE = "J"; /* C.PTR_SIZEOF == 4 ? "I" : "J"; */ //$NON-NLS-1$
 
     static final String SIGNATURE_0 = getSignature(0);
     static final String SIGNATURE_1 = getSignature(1);
     static final String SIGNATURE_2 = getSignature(2);
     static final String SIGNATURE_3 = getSignature(3);
     static final String SIGNATURE_4 = getSignature(4);
-
-    static final String SIGNATURE_N = "([" + PTR_SIGNATURE + ")" + PTR_SIGNATURE; 
+    static final String SIGNATURE_N = "([" + PTR_SIGNATURE + ")" + PTR_SIGNATURE;  //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Constructs a new instance of this class given an object to send the
      * message to, a string naming the method to invoke and an argument count.
      * Note that, if the object is an instance of <code>Class</code> it is
      * assumed that the method is a static method on that class.
-     * 
+     *
      * @param object
      *            the object to send the message to
      * @param method
@@ -65,7 +63,7 @@ public class Callback {
      * flag indicating whether or not the arguments will be passed in an array.
      * Note that, if the object is an instance of <code>Class</code> it is
      * assumed that the method is a static method on that class.
-     * 
+     *
      * @param object
      *            the object to send the message to
      * @param method
@@ -87,7 +85,7 @@ public class Callback {
      * and a value to return when an exception happens. Note that, if the object
      * is an instance of <code>Class</code> it is assumed that the method is a
      * static method on that class.
-     * 
+     *
      * @param object
      *            the object to send the message to
      * @param method
@@ -106,7 +104,7 @@ public class Callback {
         this.object = object;
         this.method = method;
         this.argCount = argCount;
-        this.isStatic = object instanceof Class<?>;
+        isStatic = object instanceof Class<?>;
         this.isArrayBased = isArrayBased;
         this.errorResult = errorResult;
 
@@ -117,19 +115,19 @@ public class Callback {
             switch (argCount) {
             case 0:
                 signature = SIGNATURE_0;
-                break; //$NON-NLS-1$
+                break;
             case 1:
                 signature = SIGNATURE_1;
-                break; //$NON-NLS-1$
+                break;
             case 2:
                 signature = SIGNATURE_2;
-                break; //$NON-NLS-1$
+                break;
             case 3:
                 signature = SIGNATURE_3;
-                break; //$NON-NLS-1$
+                break;
             case 4:
                 signature = SIGNATURE_4;
-                break; //$NON-NLS-1$
+                break;
             default:
                 signature = getSignature(argCount);
             }
@@ -142,7 +140,7 @@ public class Callback {
     /**
      * Allocates the native level resources associated with the callback. This
      * method is only invoked from within the constructor for the argument.
-     * 
+     *
      * @param callback
      *            the callback to bind
      * @param object
@@ -180,7 +178,7 @@ public class Callback {
     /**
      * Returns the address of a block of machine code which will invoke the
      * callback represented by the receiver.
-     * 
+     *
      * @return the callback address
      */
     public long /* int */getAddress() {
@@ -189,7 +187,7 @@ public class Callback {
 
     /**
      * Returns the SWT platform name.
-     * 
+     *
      * @return the platform name of the currently running SWT
      */
     public static native String getPlatform();
@@ -200,9 +198,9 @@ public class Callback {
      * <p>
      * Note: This should not be called by application code.
      * </p>
-     * 
+     *
      * @return the entry count
-     * 
+     *
      * @since 2.1
      */
     public static native int getEntryCount();
@@ -224,7 +222,7 @@ public class Callback {
      * <p>
      * Note: This should not be called by application code.
      * </p>
-     * 
+     *
      * @param enable
      *            true if callbacks should be invoked
      */
@@ -238,7 +236,7 @@ public class Callback {
      * <p>
      * Note: This should not be called by application code.
      * </p>
-     * 
+     *
      * @return true if callbacks should not be invoked
      */
     public static final native synchronized boolean getEnabled();
@@ -255,9 +253,8 @@ public class Callback {
 
     /**
      * Releases the native level resources associated with the callback.
-     * 
+     *
      * @see #dispose
      */
     static final native synchronized void unbind(Callback callback);
-
 }
