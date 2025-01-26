@@ -97,11 +97,12 @@ AC_DEFUN([CHECK_JNI_JDK],[
   # OSX had to be a little different.
   case "$host_os" in
        darwin*) 
-        AS_IF(test -r "$__JNI_JDK_HOME/Headers/jni.h",[
-          __JNI_INCLUDE="$__JNI_JDK_HOME/Headers";
+        AS_IF([test -r "$__JNI_JDK_HOME/Headers/jni.h"],[
+          __JNI_INCLUDE="$__JNI_JDK_HOME/Headers"
+        ],[
+          AC_MSG_ERROR([JNI headers not found in $__JNI_JDK_HOME/Headers. Please verify your JDK installation.])
         ])
-  esac  
-    
+  esac
 
   AS_IF(test -r "$__JNI_INCLUDE/jni.h",[
     # Also include the os specific include dirs in the JNI_CFLAGS
@@ -117,13 +118,13 @@ AC_DEFUN([CHECK_JNI_JDK],[
        cygwin*) __JNI_INCLUDE_EXTRAS="win32";;
              *) __JNI_INCLUDE_EXTRAS="genunix";;
     esac
-    
+
     for f in $__JNI_INCLUDE_EXTRAS ; do
       if test -d "$__JNI_INCLUDE/$f"; then
         __JNI_CFLAGS="$__JNI_CFLAGS -I$__JNI_INCLUDE/$f"
       fi
     done
-    
+
     saved_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $__JNI_CFLAGS"
     JNI_VERSION="1_2"
@@ -131,10 +132,10 @@ AC_DEFUN([CHECK_JNI_JDK],[
     AC_COMPILE_IFELSE(
       [AC_LANG_PROGRAM([[@%:@include <jni.h>]],[[
         #ifndef JNI_VERSION_$JNI_VERSION
-        #  error JNI version $JNI_VERSION is not supported.
+        # error JNI version $JNI_VERSION is not supported.
         #endif
       ]])
-    ],[ 
+    ],[
     
       JNI_JDK=$"$__JNI_JDK_HOME"
       JNI_EXTRA_CFLAGS="$__JNI_CFLAGS"
@@ -144,9 +145,8 @@ AC_DEFUN([CHECK_JNI_JDK],[
         darwin*)
             JNI_EXTRA_LDFLAGS="-dynamiclib" ;;
       esac
+
       AC_SUBST(JNI_EXTRA_LDFLAGS)
-      
-      
       AC_MSG_RESULT([yes])
       $2
     ],[ 

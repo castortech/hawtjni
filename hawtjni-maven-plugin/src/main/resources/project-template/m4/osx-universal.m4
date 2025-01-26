@@ -21,12 +21,12 @@ dnl   WITH_OSX_UNIVERSAL()
 dnl
 dnl   Allows creating universal binaries on the 
 dnl
-dnl   Adds the --with-universal=ARCH option.  This will will 
-dnl   set -isysroot option to the location of the MacOSX${OSX_VERSION}.sdk.
+dnl   Adds the --with-universal=ARCH option.  This will will set -isysroot 
+dnl   option to the location of the MacOSX${OSX_VERSION}.sdk.
 dnl   if OSX_VERSION is not defined, it will set it to the latest version
 dnl   of the SDK installed on your system.
 dnl
-dnl   You must use the no-dependencies option when automake is initialized.  
+dnl   You must use the no-dependencies option when automake is initialized.
 dnl   for example: AM_INIT_AUTOMAKE([no-dependencies]) 
 dnl
 dnl      This macro calls:
@@ -47,14 +47,15 @@ AC_DEFUN([WITH_OSX_UNIVERSAL],
     AC_MSG_CHECKING(OS X SDK version)
     AC_ARG_WITH([osxsdk],
     [AS_HELP_STRING([--with-osxsdk@<:@=VERSION@:>@],
-      [OS X SDK version to build against. Example: --with-osxsdk=10.6])],
+      [OS X SDK version to build against. Example: --with-osxsdk=11.0])],
     [ 
       OSX_UNIVERSAL="$withval"
     ],[
       OSX_SDKS_DIR=""
       OSX_VERSION=""
-      for v in 10.0 10.1 10.2 10.3 10.4 10.5 10.6 10.7 10.8 10.9 10.10 10.11 10.12 10.13 10.14 10.15 11.0 11.1 11.3; do
-        for location in "/Developer/SDKs" "/Library/Developer/CommandLineTools/SDKs" "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" ; do          if test -z "${OSX_VERSION}" && test -d "${location}/MacOSX${v}.sdk" ; then 
+      for v in 10.0 10.1 10.2 10.3 10.4 10.5 10.6 10.7 10.8 10.9 10.10 10.11 10.12 10.13 10.14 10.15 11.0 11.1 11.3 12.0 12.1 12.2 12.3 12.4 12.5 13.0 13.1 13.2 13.3 13.4 13.5 14.0 14.1 14.2 14.3 14.4 14.5 14.6 15.0 15.1 15.2 15.3; do
+        for location in "/Developer/SDKs" "/Library/Developer/CommandLineTools/SDKs" "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs"; do
+          if test -z "${OSX_VERSION}" && test -d "${location}/MacOSX${v}.sdk"; then
             OSX_SDKS_DIR="${location}"
             OSX_VERSION="${v}"
           fi
@@ -64,17 +65,17 @@ AC_DEFUN([WITH_OSX_UNIVERSAL],
     AC_MSG_RESULT([$OSX_VERSION])
     AC_SUBST(OSX_SDKS_DIR)
     AC_SUBST(OSX_VERSION)
-        
+
     AC_MSG_CHECKING(whether to build universal binaries)
     AC_ARG_WITH([universal],
     [AS_HELP_STRING([--with-universal@<:@=ARCH@:>@],
-      [Build a universal binary.  Set to a space separated architecture list. Pick from: i386, x86_64, ppc, and/or ppc64. @<:@default="i386 x86_64"@:>@])],
+      [Build a universal binary. Set to a space-separated architecture list. Pick from: x86_64, arm64, and/or other valid architectures. @<:@default="arm64 x86_64"@:>@])],
     [ 
       AS_IF(test "$withval" = "no", [
         OSX_UNIVERSAL=""
         AC_MSG_RESULT([no])
       ], test "$withval" = "yes", [
-        OSX_UNIVERSAL="i386 x86_64"
+        OSX_UNIVERSAL="arm64 x86_64"
         AC_MSG_RESULT([yes, archs: $OSX_UNIVERSAL])
       ],[
         OSX_UNIVERSAL="$withval"
@@ -84,22 +85,20 @@ AC_DEFUN([WITH_OSX_UNIVERSAL],
       OSX_UNIVERSAL=""
       AC_MSG_RESULT([no])
     ])
-    
+
     AS_IF(test -n "$OSX_UNIVERSAL", [
       for i in $OSX_UNIVERSAL ; do
         CFLAGS="-arch $i $CFLAGS"
         CXXFLAGS="-arch $i $CXXFLAGS"
         LDFLAGS="-arch $i $LDFLAGS"
       done 
-      
-      
+
       for f in $__JNI_INCLUDE_EXTRAS ; do
         if test -d "$__JNI_INCLUDE/$f"; then
           __JNI_CFLAGS="$__JNI_CFLAGS -I$__JNI_INCLUDE/$f"
         fi
       done
 
-      
       CFLAGS="-isysroot ${OSX_SDKS_DIR}/MacOSX${OSX_VERSION}.sdk $CFLAGS"
       CXXFLAGS="-isysroot ${OSX_SDKS_DIR}/MacOSX${OSX_VERSION}.sdk $CXXFLAGS"
       LDFLAGS="-syslibroot,${OSX_SDKS_DIR}/MacOSX${OSX_VERSION}.sdk $LDFLAGS"
@@ -110,5 +109,3 @@ AC_DEFUN([WITH_OSX_UNIVERSAL],
     ;;
   esac
 ])
-
-
